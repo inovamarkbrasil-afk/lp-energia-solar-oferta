@@ -296,14 +296,29 @@
   });
 
   /* ---------------------------------------------------------
-     11. FACEBOOK PIXEL — dispara evento Lead no clique dos CTAs
+     11. META PIXEL — evento "Lead" em qualquer clique de WhatsApp
+     Delegação no document: cobre todos os links de WhatsApp
+     existentes e qualquer um inserido dinamicamente no futuro.
      --------------------------------------------------------- */
-  document.querySelectorAll('.js-cta').forEach((cta) => {
-    cta.addEventListener('click', () => {
-      if (typeof window.fbq === 'function') {
-        window.fbq('track', 'Lead');
-      }
-    });
+  function isWhatsAppLink(href) {
+    return /wa\.me|api\.whatsapp\.com|whatsapp:\/\//i.test(href);
+  }
+
+  document.addEventListener('click', function (e) {
+    // closest('a') sobe do alvo (ex.: <span> dentro do botão) até o link
+    const link = e.target.closest && e.target.closest('a');
+    if (!link) return;
+
+    // link.href resolve a URL absoluta; getAttribute cobre esquema whatsapp://
+    const href = link.href || link.getAttribute('href') || '';
+    if (!isWhatsAppLink(href)) return;
+
+    // Dispara o evento padrão da Meta uma única vez por clique,
+    // antes do redirecionamento para o WhatsApp.
+    if (typeof window.fbq === 'function') {
+      window.fbq('track', 'Lead');
+      console.log('Meta Lead Event Fired');
+    }
   });
 
 })();
